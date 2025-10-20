@@ -1,0 +1,15 @@
+Definir objeto ArcoTSAM_CC
+               ArcoTSAM_CC.plot
+	       ArcoTSAM_CC.reac
+	       ArcoTSAM_CC.reacdirH
+	       ArcoTSAM_CC.u    para hmin, hmax
+	       ArcoTSAM_CC.udirH
+             
+Definir ArcoTSAM_Modelo.autoconex
+Definir ArcoTSAM_Modelo.autocones
+        ArcoTSAM_Modelo.GetCFoHdir(obj, elem, ijun, alpha) [elem1],[ijun],[alpha], [peso])
+
+Definir ArcoTSAM_Res.sigma(isol)
+
+Definir ArcoTSAM_ResT(riangular)
+Comprobar 2.75D ... si funciona ArcoTSAM_Res275
