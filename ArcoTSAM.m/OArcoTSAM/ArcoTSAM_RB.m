@@ -1533,7 +1533,46 @@ classdef ArcoTSAM_RB < handle
             end
         end
         
+        function [verticesComunesObj, verticesComunesRB] = isInContactWith(obj, RB)
+            % Filas comunes de Geom entre obj y RB
+            [verticesComunesObj, verticesComunesRB] = ismembertol_row(obj.Geome, RB.Geome);
+            if (nnz(verticesComunesObj)~=2) % Localizada junta. SOLO SI HAY UNA ARISTA COMUN
+                verticesComunesObj= false;
+                verticesComunesRB=false;
+                return
+            end
+            verticesComunesObj(verticesComunesObj == 0) = [];
+            verticesComunesRB(verticesComunesRB == 0) = [];
+            verticesComunesRB=flip(verticesComunesRB);
+        end
+
+        function joinIfisInContactWith(obj, RB)
+            % Filas comunes de Geom entre obj y RB
+            [verticesComunesObj, verticesComunesRB] = isInContactWith(obj, RB);
+            if ~isequal(verticesComunesObj,  false)
+                 if (verticesComunesObj(1)==1 && verticesComunesObj(2)==size(obj.Geome,1)) % junta definida por el último vertice y el primero
+                     verticesComunesObj(1)=verticesComunesObj(2);
+                     verticesComunesObj(2)=1;
+                 end
+                 % si Junta=[] o la nueva junta ya esta definida se añade
+                 if isempty(obj.Junta) || ~ismember(verticesComunesObj', obj.Junta, 'row')
+                    obj.Junta = [obj.Junta; verticesComunesObj']; % Añadida junta
+                 end
+
+                 % Lo mismo para RB
+                 idx = find(verticesComunesRB);
+                 if (verticesComunesRB(1)==1 && verticesComunesRB(2)==size(RB.Geome,1)) % junta definida por el último vertice y el primero
+                     verticesComunesRB(1)=verticesComunesRB(2);
+                     verticesComunesRB(2)=1;
+                 end
+                 % si Junta=[] o la nueva junta ya esta definida se añade
+                 if isempty(RB.Junta) || ~ismember(verticesComunesRB', RB.Junta, 'row')
+                    RB.Junta = [RB.Junta; verticesComunesRB'];
+                 end
+            end
+        end
     end       
+
     %methods (Static)
     %end
 end
