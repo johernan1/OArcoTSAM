@@ -3,15 +3,13 @@ function swapXZinFig(ax)
 %
 %   swapXZinFig(h)
 %       Intercambia las coordenadas X y Z de todos los objetos gráficos
-%       3D que cuelgan del eje o figura indicado por 'h'.
+%       3D de la figura indicada por 'ax'.
 %
 %   Parámetros:
 %       h - handle a una figura (Figure).
 %
 %   Notas:
 %       - Modifica los objetos directamente (no crea una copia).
-%       - Funciona con plot3, surf, mesh, line, patch, etc.
-%       - Reetiqueta los ejes para reflejar el intercambio.
 
 if nargin < 1 || isempty(h)
     ax = gca;
@@ -43,16 +41,12 @@ end
 quivers = findobj(ax, 'Type', 'Quiver');
 for k = 1:length(quivers)
     % Extraer datos
-    X = get(quivers(k), 'XData');
-    Y = get(quivers(k), 'YData');
-    Z = get(quivers(k), 'ZData');
     U = get(quivers(k), 'UData');
     V = get(quivers(k), 'VData');
     W = get(quivers(k), 'WData');
 
     % Intercambiar X <-> Z
     set(quivers(k), ...
-        ...'XData', Z, 'ZData', X, ...
         'UData', W, 'WData', U);
 end
 

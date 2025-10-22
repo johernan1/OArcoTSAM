@@ -85,6 +85,7 @@ MRBc.elems{1}.Conex(1,:)=[0 0 0];
 %MRBb.reSetConex;
 %MRB.plotConex;
 MRB.plota;   % Apoyos
+swapXZinFig(); view(-30,30);
 
 
 %% CALCULO Y CHEQUEO DE LA MATRIZ H
@@ -160,7 +161,7 @@ MRB.plot;
 escf=1;
 ihip=3;
 MRB.plotf(escf, ihip);
-swapXZinFig();
+swapXZinFig(); view(-30,30);
 %escf=1;
 % ihip=1;
 % MRB.plotf(escf, ihip);
@@ -176,7 +177,7 @@ esca=.25;
 iSol=1;
 MRB.plotu( false,iSol,esca);
 MRB.plotuj(false,iSol,esca);
-swapXZinFig();
+swapXZinFig(); view(-30,30);
 
 iniFigureArcoTSAM (4);
 
@@ -184,7 +185,7 @@ escf=-.025;
 escu=0;
 MRB.plot;
 MRB.plotRjULM(escf, false, iSol, escu);
-swapXZinFig();
+swapXZinFig(); view(-30,30);
 
 pauseOctaveFig
 
