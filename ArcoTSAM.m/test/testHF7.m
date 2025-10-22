@@ -40,9 +40,9 @@ MRBc.MoveConex(ncx);
 
 MRB = ArcoTSAM_Modelo();
 
-MRBa.ucsA=pi/2;
-MRBb.ucsA=pi+pi/6;
-MRBc.ucsA=2*pi-pi/6;
+MRBa.ucsA=pi/2-pi/2;
+MRBb.ucsA=pi+pi/6-pi/2;
+MRBc.ucsA=2*pi-pi/6-pi/2;
 MRB.Adds(MRBa);
 MRB.Adds(MRBb);
 MRB.Adds(MRBc);
@@ -72,9 +72,10 @@ MRB.Adds(MRBrst1);
 % MRBrst2.Conex=100+ncx:100+ncx+4;
 % MRB.Adds(MRBrst2);
 
-MRB.plot;    % Topología
-MRB.plotj;   % juntas
-MRB.plotn;   % numero arco.dovela
+MRB.plot;  % Topología
+MRB.plotj; % juntas
+MRB.plotn; % numero arco.dovela
+
 
 %% Apoyos
 % Se renumeran Conex, aunque no es necesario
@@ -86,10 +87,10 @@ MRBc.elems{1}.Conex(1,:)=[0 0 0];
 MRB.plota;   % Apoyos
 
 
-
 %% CALCULO Y CHEQUEO DE LA MATRIZ H
 % La comprobacion solo es valida para una geometria y una posicion del 
 % origen de coordenadas
+
 subsection ('H')
 H = MRB.GetH;
 chk('H', full(sum(sum(H))), -5.7);
@@ -133,8 +134,9 @@ gammau=1;
             
             c = zeros(MRB.GetNs,1);
             c(coneSApoyo) = sdir; 
-           
-minhdirD=MRB.GethdirMinLPD(ielem, ijunt, alpha, gammau,vectQ,c);
+         apoyoAsiento=MRB.elems{1}.elems{ielem};   
+         %MRB.GetCFoHdir(ielem, ijunt, alpha)  
+minhdirD=MRB.GethdirMinLPD(apoyoAsiento, ijunt, alpha, gammau,vectQ,c);
 fprintf('minhdirD=%f\n', minhdirD);
 %chk('LPP==LPD, min hd', minhdir, minhdirD)
 %chk('vectS LPP==LPD', MRB.GetVectS(1),MRB.GetVectS(2)); 
@@ -158,6 +160,7 @@ MRB.plot;
 escf=1;
 ihip=3;
 MRB.plotf(escf, ihip);
+swapXZinFig();
 %escf=1;
 % ihip=1;
 % MRB.plotf(escf, ihip);
@@ -173,6 +176,7 @@ esca=.25;
 iSol=1;
 MRB.plotu( false,iSol,esca);
 MRB.plotuj(false,iSol,esca);
+swapXZinFig();
 
 iniFigureArcoTSAM (4);
 
@@ -180,6 +184,7 @@ escf=-.025;
 escu=0;
 MRB.plot;
 MRB.plotRjULM(escf, false, iSol, escu);
+swapXZinFig();
 
 pauseOctaveFig
 
