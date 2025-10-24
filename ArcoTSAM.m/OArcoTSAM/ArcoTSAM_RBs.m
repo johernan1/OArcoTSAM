@@ -23,7 +23,66 @@ classdef ArcoTSAM_RBs < handle
         function obj = Adds(obj,RB)
             obj.elems{size(obj.elems,2)+1} = RB;
         end
-        
+
+        function  nc = GetNConex(obj)
+            nc = 0;
+            for ielem = 1: obj.GetNelems
+                nc = max(nc, obj.elems{ielem}.GetNConex);
+            end
+        end
+
+        function delJuntas(obj)
+            for e = 1:numel(obj.elems)
+                obj.elems{e}.delJuntas();
+            end
+        end
+
+        function obj = joinIfisInContactWith(obj, RBs, nconex)
+
+            if nargin < 3
+                nconex = 1+max(obj.GetNConex, RBs.GetNConex);  % valor inicial
+            end
+            % --- Asegurar que RBs tiene elems ---
+            if ~isprop(RBs, 'elems')
+                error('El parámetro RBs no tiene la propiedad "elems".');
+            end
+
+            % --- Recorrer todos los elementos de obj ---
+            for e = 1:numel(obj.elems)
+                elemento = obj.elems{e};
+                %fprintf("Procesando elemento obj.elems{%d} de tipo %s\n", e, class(elemento));
+
+                % --- Recorrer todos los elementos de RBs ---
+                for r = 1:numel(RBs.elems)
+                    elementoRB = RBs.elems{r};
+                    %fprintf("   Comparando con RBs.elems{%d} de tipo %s\n", r, class(elementoRB));
+
+                    % --- Caso 1: Ambos son contenedores -> recursión ---
+                    if isa(elemento, 'ArcoTSAM_RBs') && isa(elementoRB, 'ArcoTSAM_RBs')
+                        elemento.joinIfisInContactWith(elementoRB, nconex);
+                    % --- Caso 2: Ambos son RB básicos -> función base ---
+                    elseif isa(elemento, 'ArcoTSAM_RB') && isa(elementoRB, 'ArcoTSAM_RB')
+                        if elemento.joinIfisInContactWith(elementoRB, nconex);
+                            nconex=nconex+3;
+                        end
+                    % --- Caso 3: Uno es RB y otro es contenedor ---
+                    elseif isa(elemento, 'ArcoTSAM_RB') && isa(elementoRB, 'ArcoTSAM_RBs')
+                        tempContainer = ArcoTSAM_RBs();  % crear contenedor temporal si lo necesitas
+                        tempContainer.elems = {elemento};
+                        tempContainer.joinIfisInContactWith(elementoRB, nconex);
+                        elemento = tempContainer.elems{1};  % obtener RB combinado
+                    % --- Caso 4: Uno es contenedor RB y otro es RB ---
+                    elseif isa(elemento, 'ArcoTSAM_RBs') && isa(elementoRB, 'ArcoTSAM_RB')
+                        MRB=ArcoTSAM_ModeloNL();
+                        MRB.Adds(elementoRB);
+                        elemento.joinIfisInContactWith(MRB, nconex); % si tienes constructor de contenedor a partir de RB
+                    else
+                        fprintf("   -> Tipos no compatibles: %s y %s. Se omite.\n", class(elemento), class(elementoRB));
+                    end
+                end
+            end
+        end
+
         function  ne = GetNelems(obj)
             ne = size(obj.elems,2);
         end
@@ -108,6 +167,7 @@ classdef ArcoTSAM_RBs < handle
             obj.iniplot;
             hold on
             nelem = obj.GetNelems;
+            g=[];
             for ielem = 1 : nelem
                 g = obj.elems{ielem}.plotj();
             end  

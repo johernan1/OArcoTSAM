@@ -98,19 +98,28 @@ classdef ArcoTSAM_RB < handle
            
         function obj = set.Junta(obj, juntas)
             if max(max(juntas)) > obj.GetNVerti
-                error('set.Junta: max(juntas) > obj.GetNVerti\n %f > %f .\n', ...
-                    max(max(juntas)), obj.GetNVerti) 
+                error('set.Junta: max(juntas) > obj.GetNVerti\n %f > %f .\n %s', ...
+                    max(max(juntas)), obj.GetNVerti, obj.myDispErr) 
             elseif mod(size(juntas,2),2)  ~= 0  
-                error('set.Juntas: El numero de componetes debe ser par')
+                error('set.Juntas: El numero de componetes debe ser par\n %s', obj.myDispErr)
             else
                 obj.Junta = juntas;
             end
         end
-                   
+                  
+        function delJuntas(obj)
+            %Borra Juntas y Conex (si existe)
+            % se mantiene la ultima fila de Conex-> gdl del solido
+            obj.Junta=[];
+            obj.Conex=obj.Conex(end,:);
+        end
+
         function obj = set.Conex(obj, conex)
                                                 %+1 solido
             if sum(size(conex) ~= [obj.GetNJuntas+1 obj.nGdlxJ]) > 0  
-                error('set.Conex: Wrong number of input arguments')
+                error(['set.Conex: Wrong number of input arguments. ' ...
+                    'El numero de filas de conex debe ser el numero de ' ...
+                    'filas de obj.Juntas +1\n %s'], obj.myDispErr)'
             end
             obj.Conex = conex;
         end
@@ -128,7 +137,7 @@ classdef ArcoTSAM_RB < handle
         function obj = set.ConeR(obj, coneR)
                                                 %+1 solido
             if sum(size(coneR) ~= [obj.GetNJuntas+1 obj.nGdlxJ]) > 0  
-                error('set.Conex: Wrong number of input arguments')
+                error('set.ConeR: Wrong number of input arguments. \n %s', obj.myDispErr)
             else
                 obj.ConeR = coneR;
             end
@@ -165,6 +174,10 @@ classdef ArcoTSAM_RB < handle
             end
         end
         
+        function  nc = GetNConex(elem)
+            nc = max(max(elem.Conex));
+        end
+
         function  nj = GetNJuntas(elem)
             nj = size(elem.Junta,1);
         end 
@@ -439,6 +452,7 @@ classdef ArcoTSAM_RB < handle
         end
         
         function   g = plotj(obj)
+            g=[];
             for ijunt = 1 : obj.GetNJuntas
                 g = obj.plotij(ijunt);
             end
@@ -1541,33 +1555,60 @@ classdef ArcoTSAM_RB < handle
                 verticesComunesRB=false;
                 return
             end
+            % Se eliminan los terminos nulos
             verticesComunesObj(verticesComunesObj == 0) = [];
             verticesComunesRB(verticesComunesRB == 0) = [];
+            % junta definida por el último vertice y el primero. Se
+            % reordena
+            if (verticesComunesObj(1)==1 && verticesComunesObj(2)==size(obj.Geome,1)) 
+                verticesComunesObj=flip(verticesComunesObj);
+                % y tambien se reordenan los de rB 
+                verticesComunesRB=flip(verticesComunesRB);
+            end
+            % Los vertices de RB se reordenan 
             verticesComunesRB=flip(verticesComunesRB);
         end
 
-        function joinIfisInContactWith(obj, RB)
-            % Filas comunes de Geom entre obj y RB
+        function out = myDispErr(obj)
+            out = evalc('section(''RB.propierties'')');
+            out = [out evalc('disp(obj)')];
+            out = [out evalc('section(''RB.Geome'')')];
+            out = [out evalc('disp(obj.Geome)')];
+            out = [out evalc('section(''RB.Junta'')')];
+            out = [out evalc('disp(obj.Junta)')];
+            out = [out evalc('section(''RB.Conex'')')];
+            out = [out evalc('disp(obj.Conex)')];
+        end
+
+        function addJunta(obj,nuevaJunta, nuevaConex)
+            % Añade una junta al RB, y su correspondiente matriz conex
+            maxJunta = max(nuevaJunta(:));  % máximo valor de nuevaJunta 
+            nVert = obj.GetNVerti;          % número total de vértices permitidos
+
+            if maxJunta > nVert
+                error('addJunta:ValorFueraDeRango', ...
+                    'El valor máximo de nuevaJunta (%d) excede el número de vértices (%d). \n %s', ...
+                    maxJunta, nVert, myDispErr(obj));
+            end
+
+            obj.Junta = [obj.Junta; nuevaJunta];
+            pos = size(obj.Conex,1) - 1;
+            obj.Conex = [obj.Conex(1:pos,:); nuevaConex; obj.Conex(pos+1:end,:)];
+        end
+
+        function f = joinIfisInContactWith(obj, RB, idconex)  
+            f= false;
+            if nargin < 3
+                idconex = max(obj.GetNConex, RB.GetNConex);  % valor inicial
+            end          % Filas comunes de Geom entre obj y RB
             [verticesComunesObj, verticesComunesRB] = isInContactWith(obj, RB);
             if ~isequal(verticesComunesObj,  false)
-                 if (verticesComunesObj(1)==1 && verticesComunesObj(2)==size(obj.Geome,1)) % junta definida por el último vertice y el primero
-                     verticesComunesObj(1)=verticesComunesObj(2);
-                     verticesComunesObj(2)=1;
-                 end
-                 % si Junta=[] o la nueva junta ya esta definida se añade
+                 % si Junta=[] o la nueva junta NO esta ya definida se añade
                  if isempty(obj.Junta) || ~ismember(verticesComunesObj', obj.Junta, 'row')
-                    obj.Junta = [obj.Junta; verticesComunesObj']; % Añadida junta
-                 end
-
-                 % Lo mismo para RB
-                 idx = find(verticesComunesRB);
-                 if (verticesComunesRB(1)==1 && verticesComunesRB(2)==size(RB.Geome,1)) % junta definida por el último vertice y el primero
-                     verticesComunesRB(1)=verticesComunesRB(2);
-                     verticesComunesRB(2)=1;
-                 end
-                 % si Junta=[] o la nueva junta ya esta definida se añade
-                 if isempty(RB.Junta) || ~ismember(verticesComunesRB', RB.Junta, 'row')
-                    RB.Junta = [RB.Junta; verticesComunesRB'];
+                     nuevaConex=[idconex, idconex+1, idconex+2];
+                     obj.addJunta(verticesComunesObj', nuevaConex);
+                     RB.addJunta (verticesComunesRB',  nuevaConex);
+                     f =true;
                  end
             end
         end
