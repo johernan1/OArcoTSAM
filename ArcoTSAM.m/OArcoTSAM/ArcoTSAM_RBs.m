@@ -24,6 +24,31 @@ classdef ArcoTSAM_RBs < handle
             obj.elems{size(obj.elems,2)+1} = RB;
         end
 
+
+        function obj = createFromDxf(obj, file)
+            poliLineas=leerPolilineasDXF(file)
+            capas = unique({poliLineas.capa});
+            for iCapa = 1:numel(capas)
+                capa = capas{iCapa};
+                MRBi = ArcoTSAM_ModeloNL();
+                MRBi.name=capa;
+                i=1;
+                for iPoli = 1:numel(poliLineas)
+                    if strcmp(poliLineas(iPoli).capa, capa)
+                        RB = ArcoTSAM_RB210();
+                        RB.name=num2str(i);
+                        RB.Geome=poliLineas(iPoli).vertices;
+                        RB.Conex=[i, i+1, i+2];
+                        MRBi.Adds(RB);
+                        i=i+3;
+                    end
+                end
+                MRBi.plot;
+                obj.Adds(MRBi);
+            end
+            obj.joinIfisInContactWith(obj);
+        end
+
         function  nc = GetNConex(obj)
             nc = 0;
             for ielem = 1: obj.GetNelems
@@ -36,6 +61,7 @@ classdef ArcoTSAM_RBs < handle
                 obj.elems{e}.delJuntas();
             end
         end
+
 
         function obj = joinIfisInContactWith(obj, RBs, nconex)
 
