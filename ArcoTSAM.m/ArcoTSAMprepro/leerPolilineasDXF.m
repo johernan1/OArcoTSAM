@@ -33,7 +33,7 @@ if isempty(bloques)
 end
 
 %% Inicializar salida
-polilineas = struct('tipo', {}, 'capa', {}, 'vertices', {});
+polilineas = struct('capa', {}, 'vertices', {});
 
 %% Procesar cada bloque
 for i = 1:numel(bloques)
@@ -63,7 +63,7 @@ for i = 1:numel(bloques)
             Z = str2double([z{:}]);
             V = [X(:), Y(:), Z(:)];
         else
-            V = [X(:), Y(:)];
+            V = [X(:), -Y(:)];
         end
     else
         % Si no hay pares 10/20, intentamos LWPOLYLINE compacta
